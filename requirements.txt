@@ -3,3 +3,19 @@ requests
 beautifulsoup4
 feedparser
 pandas
+
+#Streaming and Big Data
+kafka-python
+pyspark
+
+# NLP and Machine Learning
+transformers
+torch
+
+#Orchestration
+apache-airflow
+
+#Database and Config
+sqlalchemy
+psycopg2-binary
+python-dotenv
