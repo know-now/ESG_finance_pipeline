@@ -1,0 +1,5 @@
+# Data Engineering, Scripting
+requests
+beautifulsoup4
+feedparser
+pandas
