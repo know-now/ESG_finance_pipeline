@@ -1,0 +1,48 @@
+# Environment variables
+.env
+# Environment variables and Secrets
+.env
+.env.*
+*.pem
+*.key
+
+# VS Code / IDEs
+.vscode/
+.lh/
+.idea/
+*.swp
+
+# Python
+venv/
+env/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+config.yaml
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Databases and Local Volumes
+chroma_data/
+postgres_data/
+redis_data/
+kafka_data/
+zookeeper_data/
+
+# Reports and Generated Outputs
+reports/
+*.pdf
+*.png
+*.jpg
+*.csv
+*.xlsx
+
+# System Files
+.DS_Store
+Thumbs.db
+.env
