@@ -39,4 +39,10 @@ def fetch_esg_news():
         except Exception as e:
             print(f"[-] Error parsing {url}: {e}")
             
-    print(f"[*] Cycle complete. Found ")
+    print(f"[*] Cycle complete. Found {found_articles} ESG-related articles.")
+if __name__ ==   "__main__":
+    while True: 
+        fetch_esg_news()
+        print("Waiting 60 seconds before next fetch...")
+        time.sleep(60)
+        
