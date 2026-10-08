@@ -1,13 +1,18 @@
-import os
-import sys
 import time
-from dotenv import load_dotenv
-load_dotenv(override = True)
-import pandas as pd
-from sqlalchemy import create_engine
+import json
+import feedparser 
 
+print("=== ESG Financial News Scraper Started ===")
 
-print("===Extract, Transform, Load (ETL) Started ===")
+#RSS of financial and ecologic news
 
-try:
-    # Block Extract (E): creation of raw test data about finance
+FINANCE_FEEDS = [
+    "https://feeds.a.dj.com/rss/RSSWSJ.xml",          # Wall Street Journal
+    "https://search.cnbc.com/rs/search/combinedcms/view.xml?id=10000664", # CNBC Finance
+]
+
+# Keywords needed for choosing correct info
+ESG_KEYWORDS = ['carbon', 'emission', 'climate', 'green', 'sustainable', 'pollution', 'esg', 'penalty', 'lawsuit']
+
+def fetch_esg_news():
+    print(f"\n [*] Fetching news at [time.strftime('%H:%M:)]")
