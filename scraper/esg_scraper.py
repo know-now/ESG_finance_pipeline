@@ -37,6 +37,9 @@ FINANCE_FEEDS = [
     "https://feeds.a.dj.com/rss/RSSLifestyle.xml"
 ]
 
+seen_articles = set()
+
+
 def fetch_esg_news():
     print(f"\n [*] Fetching news at {time.strftime('%H:%M:%S')}")
     found_articles=0
@@ -50,6 +53,10 @@ def fetch_esg_news():
                 summary = entry.get('summary', '')
                 
                 print(f"[DEBUG] Found article: {title}")
+                
+                if title in seen_articles:
+                    continue
+                
                 full_text = (title + " " + summary).lower()
                 
                 # Checking if there is in a text at least one ESG-word
@@ -60,16 +67,21 @@ def fetch_esg_news():
                         "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
                         "summary": summary
                     }
-                    print(f" [КAFKA SEND] -> {title}")
+                    
+                    producer.send('esg_news_stream', value=article_data)
+                    producer.flush()
+                    seen_articles.add(title)
+                    print(f"[KAFKA SEND] -> {title}")
                     found_articles += 1
         except Exception as e:
             print(f"[-] Error parsing {url}: {e}")
     print(f"[*] Cycle complete. Sent {found_articles} ESG articles to Kafka.")
+    print(f"[*] Total unique articles in memory: {len(seen_articles)}")
             
 if __name__ ==   "__main__":
     while True: 
         fetch_esg_news()
-        print("Waiting 60 seconds before next fetch...")
+        print("Waiting 120 seconds before next fetch...")
         time.sleep(120)
 
 
