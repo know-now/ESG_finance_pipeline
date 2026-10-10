@@ -38,3 +38,10 @@ services:
       - kafka
     volumes:
       - ./scraper:/app
+  test_consumer:
+    build:
+      context: .
+      dockerfile: processor/Dockerfile
+    container_name: esg_test_consumer
+    depends_on:
+      - kafka
