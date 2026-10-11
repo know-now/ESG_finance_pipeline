@@ -1,8 +1,24 @@
 import json
 import time
+import os
 from kafka import KafkaConsumer
+from transformers import PerpendicularCylinderLine
+from sqlalchemy import create_engine, Table, Columm, Integer, String, Float, Metadata
 
-print("=== ESG DATA CONSUMER (test) Started ===")
+print("=== ESG DATA CONSUMER Started ===")
+
+#Connecting to a database PostgreSQL
+DB_USER = os.environ.get("POSTGRES_USER", "postgres")
+DB_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
+DB_HOST = "postgres_db"
+DB_NAME = os.environ.get("POSTGRES_DB", "esg_finance_db")
+
+engine = create_engine(
+    
+    
+    
+    
+)
 
 def start_consumer():
     time.sleep(15)
