@@ -38,3 +38,17 @@ services:
       - kafka
     volumes:
       - ./scraper:/app
+  processor_app:
+    build:
+      context: .
+      dockerfile: processor/Dockerfile
+    container_name: esg_processor
+    depends_on:
+      - kafka
+      - postgres_db
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          memory: 2G

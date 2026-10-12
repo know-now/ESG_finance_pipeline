@@ -10,7 +10,7 @@ pyspark
 
 # NLP and Machine Learning
 transformers
-torch
+
 
 #Orchestration
 apache-airflow
