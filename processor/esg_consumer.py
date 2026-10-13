@@ -18,16 +18,17 @@ metadata = MetaData()
 
 #Creating a table if it does not exist
 esg_news_table = Table(
-    'esg_analysis', metadata,
+    'esg_analysis_v2', metadata,
     Column('id', Integer, primary_key=True), 
     Column('title', String), 
     Column('source', String),
-    Column('sentiment', String),
-    Column('risk_score', Float),
+    Column('distilbert_sentiment', String),
+    Column('finbert_risk', Float),
     Column('timestamp', String)
 )
 metadata.create_all(engine)
 print("[*] PostgreSQL Table Ready.")
+print("[*] Loading Models (this might take a few minutes)...")
 
 # Downloading NLP model (Sentiment Analysis)
 print("[*] Loading HuggingFace NLP model (this might take a minute)...")
