@@ -11,6 +11,11 @@ services:
       - "5432:5432"
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   kafka:
     image: apache/kafka:3.7.0
     container_name: esg_kafka
@@ -52,3 +57,14 @@ services:
       resources:
         limits:
           memory: 2G
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    container_name: esg_dashboard
+    ports:
+      - "8501:8501"
+    depends_on:
+      - postgres_db
+    env_file:
+      - .env

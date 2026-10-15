@@ -23,4 +23,16 @@ def load_data():
 if df.empty:
     st.warning("Waiting data from Kafka...")
 else:
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total amount of analysed articles", len(df))
+    col2.netric("Critical ESG risks (FinBERT)", len(df[df['finbert_risk'] > 0.8]))
+    col3.metric("Critical ESG risks (DistilBERT)", len(df[df['distilbert_risk'] > 0.8]))
     
+    st.subheader("Comparison of risks (FinBERT vs DistilBERT)")
+    fig = px.line(df, x=df.index, y=['finbert_risk', 'distilbert_risk'], 
+                  labels={'value': 'Risk Score', 'index': 'Articles'},
+                  title="Dynamics of risk evaluation")
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.subheader("Last news")
+    st.dataframe(df[['timestamp', 'title', 'finbert_sentiment', 'distilbert_sentiment', 'source']])
