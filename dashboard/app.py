@@ -8,19 +8,28 @@ st.set_page_config(page_title="ESG Guardian", layout="wide")
 st.title("📊 ESG Guardian: Real-Time NLP Analysis")
 st.markdown("Comparison of a general model (DistilBert) and special (FinBERT)")
 
+st.sidebar.header('Filter')
+days_to_show = st.sidebar.slider("Show history data (days)", 1, 30, 7)
 
 @st.cache_data(ttl=10)
-def load_data():
+def load_data(days):
     DB_USER = os.environ.get("POSTGRES_USER", "postgres")
     DB_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
     DB_HOST = "postgres_db"
     DB_NAME = os.environ.get("POSTGRES_DB", "esg_finance_db")
     engine = create_engine(f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}")
     try:
-        return pd.read_sql("SELECT * FROM esg_analysis_v3 ORDER BY id DESC", engine)
+        query = f"""
+            SELECT * FROM esg_analysis_v3
+            WHERE CAST(timestamp AS TIMESTAMP) >= NOW() - INTERVAL '{days} days'
+            ORDER BY id DESC
+            """
+            
+        return pd.read_sql(query, engine)
     except:
         return pd.DataFrame()
-df = load_data()
+df = load_data(days_to_show)
+
 if df.empty:
     st.warning("Waiting data from Kafka...")
 else:
@@ -50,6 +59,3 @@ st.download_button(
     file_name='esg_risk_report.csv',
     mime='text/csv',
 )
-
-st.sidebar.header('Filter')
-days_to_show = st.sidebar.slider("Show history data (days)", 1, 30, 7)
