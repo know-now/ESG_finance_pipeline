@@ -18,21 +18,25 @@ metadata = MetaData()
 
 #Creating a table if it does not exist
 esg_news_table = Table(
-    'esg_analysis', metadata,
+    'esg_analysis_v3', metadata,
     Column('id', Integer, primary_key=True), 
     Column('title', String), 
     Column('source', String),
-    Column('sentiment', String),
-    Column('risk_score', Float),
+    Column('distilbert_sentiment', String),
+    Column('distilbert_risk', Float),
+    Column('finbert_sentiment', String),
+    Column('finbert_risk', Float),
     Column('timestamp', String)
 )
 metadata.create_all(engine)
 print("[*] PostgreSQL Table Ready.")
+print("[*] Loading Models (this might take a few minutes)...")
 
-# Downloading NLP model (Sentiment Analysis)
-print("[*] Loading HuggingFace NLP model (this might take a minute)...")
-nlp_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
-print("[*] Model loaded successfully.")
+#basemodel (general english sentiment)
+distilbert = pipeline("sentiment-analysis", model = "distilbert-base-uncased-finetuned-sst-2-english")
+#Finance model
+finbert = pipeline("sentiment-analysis", model="ProsusAI/finbert")
+print("[*] Both NLP Models loaded successfully")
 
 def start_processing():
     #waiting until Kafka and Postgress is ready
@@ -50,27 +54,30 @@ def start_processing():
         data = message.value
         title = data['title']
         
-        #Analysing the text
-        nlp_result = nlp_analyzer(title)[0]
-        sentiment = nlp_result['label']
-        score = nlp_result['score']
+        # Analydis of DistilBERT
+        res_d = distilbert(title)[0]
+        sent_d = res_d['label'].upper()
+        risk_d = res_d['score'] if sent_d == 'NEGATIVE' else (1.0 - res_d['score'])
         
-        #Calculating Risk Score (the worse the segment - the higher the risk)
-        risk_score = score if sentiment == 'NEGATIVE' else (1.0 - score)
+        #Analysis FinBERT (returns positive, negative, neutral)
+        res_f = finbert(title)[0]
+        sent_f = res_f['label'].upper()
+        risk_f = res_f['score'] if sent_f == 'NEGATIVE' else (1.0 - res_f['score'])
         
-        print(f"\n[AI ANALYZED] {title}")
-        print(f"-> Sentiment: {sentiment} (Risk: {risk_score: {risk_score:.2f}})")
+        print(f"\n[AI] {title}")
+        print(f" -> DistilBERT: {sent_d} ({risk_d:.2f}) | FinBERT: {sent_f} ({risk_f:.2f})")
         
         with engine.connect() as conn:
             conn.execute(esg_news_table.insert().values(
-                title=title,
+                title=title, 
                 source=data['source'],
-                sentiment=sentiment,
-                risk_score=risk_score,
+                distilbert_sentiment=sent_d,
+                distilbert_risk=risk_d,
+                finbert_sentiment=sent_f,
+                finbert_risk=risk_f,
                 timestamp=data['timestamp']
             ))
             conn.commit()
-            print(" -> [DB] Saved to PostgreSQL!")
-
+        
 if __name__ == "__main__":
     start_processing()
