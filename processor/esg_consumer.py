@@ -18,11 +18,13 @@ metadata = MetaData()
 
 #Creating a table if it does not exist
 esg_news_table = Table(
-    'esg_analysis_v2', metadata,
+    'esg_analysis_v3', metadata,
     Column('id', Integer, primary_key=True), 
     Column('title', String), 
     Column('source', String),
     Column('distilbert_sentiment', String),
+    Column('distilbert_risk', Float),
+    Column('finbert_sentiment', String),
     Column('finbert_risk', Float),
     Column('timestamp', String)
 )
@@ -71,7 +73,7 @@ def start_processing():
                 source=data['source'],
                 distilbert_sentiment=sent_d,
                 distilbert_risk=risk_d,
-                finbert_sent=sent_f,
+                finbert_sentiment=sent_f,
                 finbert_risk=risk_f,
                 timestamp=data['timestamp']
             ))
