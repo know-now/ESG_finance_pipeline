@@ -68,3 +68,10 @@ services:
       - postgres_db
     env_file:
       - .env
+  minio:
+    image: minio/minio
+    container_name: esg_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
