@@ -1,10 +1,27 @@
+import boto3
 import time
 import json
 import feedparser 
+import os
+from datetime import datetime
 from kafka import KafkaProducer
 
 print("=== ESG Financial News Scraper (Kafka Producer) Started ===")
 
+NINIO_USER = os.environ.get("MINIO_ROOT_USER", "admin")
+MINIO_PASSWORD = os.environ.get("NINIO_ROOT_PASSWORD", "password123")
+print("[*] Connecting to MinIO Data Lake... ")
+s3_client = boto3.client('s3', 
+                        endpoint_url = 'http://minio:9000',
+                        aws_access_key_id=MINIO_USER,
+                        aws_secret_access_key=MINIO_PASSWORD)
+try:
+    s3_client.head_bucket(Bucket='raw-news')
+    print("[*] MinIO bucket 'raw-news' exists.")
+except:
+    print("[*] Creating MinIO bucket 'raw-news'...")
+    s3_client_create_bucket(Bucket='raw-news')
+    
 # Connecting to our Kafka-broker
 def connect_to_kafka(retries=10, delay=5):
     for attempt in range(retries):
@@ -67,6 +84,8 @@ def fetch_esg_news():
                         "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
                         "summary": summary
                     }
+                    
+                    file_name =f"news_{datetime.now().strftime('%Y%m%d_%H%M%S_')}"
                     
                     producer.send('esg_news_stream', value=article_data)
                     producer.flush()
