@@ -69,7 +69,7 @@ services:
     env_file:
       - .env
   minio:
-    image: python:3.10-slim
+    image: alpine:3.20
     container_name: esg_minio
     ports:
       - "9000:9000"
@@ -78,10 +78,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     command: >
-      sh -c "apt-get update && apt-get install -y wget ca-certificates &&
-      wget https://dl.min.io/server/minio/release/linux-amd64/minio -O /usr/local/bin/minio &&
-      chmod +x /usr/local/bin/minio &&
-      minio server /data --address 0.0.0.0:9000 --console-address :9001"
+      sh -c "apk update && apk add --no-cache minio &&
+      minio server /data --address=0.0.0.0:9000 --console-address=:9001"
     volumes:
       - ./minio_data:/data
       
