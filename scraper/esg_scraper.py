@@ -8,8 +8,8 @@ from kafka import KafkaProducer
 
 print("=== ESG Financial News Scraper (Kafka Producer) Started ===")
 
-NINIO_USER = os.environ.get("MINIO_ROOT_USER", "admin")
-MINIO_PASSWORD = os.environ.get("NINIO_ROOT_PASSWORD", "password123")
+MINIO_USER = os.environ.get("MINIO_ROOT_USER", "admin")
+MINIO_PASSWORD = os.environ.get("MINIO_ROOT_PASSWORD", "password123")
 print("[*] Connecting to MinIO Data Lake... ")
 s3_client = boto3.client('s3', 
                         endpoint_url = 'http://minio:9000',
@@ -20,7 +20,7 @@ try:
     print("[*] MinIO bucket 'raw-news' exists.")
 except:
     print("[*] Creating MinIO bucket 'raw-news'...")
-    s3_client_create_bucket(Bucket='raw-news')
+    s3_client.create_bucket(Bucket='raw-news')
     
 # Connecting to our Kafka-broker
 def connect_to_kafka(retries=10, delay=5):
@@ -76,18 +76,26 @@ def fetch_esg_news():
                 
                 full_text = (title + " " + summary).lower()
                 
-                # Checking if there is in a text at least one ESG-word
+                # data in a dictionary before ESG to keep raw data
+                article_data = {
+                    "title": title,
+                    "source": url,
+                    "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+                    "summary": summary
+                }
+                
+                file_name =f"news_{datetime.now().strftime('%Y%m%d_%H%M%S_')}"
+                try:
+                    s3_client.put_object(Bucket='raw-news', Key=file_name, Body=json.dumps(article_data))
+                    print(f"[MINIO SAVE] -> {file_name}")
+                except Exception as e:
+                    print(f"[-] Failed to save to MinIO: {e}")
+                    
+                    
+                #Checking ESG and sending to Kafka
                 if any(keyword in full_text for keyword in ESG_KEYWORDS):
-                    article_data = {
-                        "title": title,
-                        "source": url,
-                        "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
-                        "summary": summary
-                    }
-                    
-                    file_name =f"news_{datetime.now().strftime('%Y%m%d_%H%M%S_')}"
-                    
                     producer.send('esg_news_stream', value=article_data)
+                    
                     producer.flush()
                     seen_articles.add(title)
                     print(f"[KAFKA SEND] -> {title}")
