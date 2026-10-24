@@ -33,6 +33,7 @@ postgres_data/
 redis_data/
 kafka_data/
 zookeeper_data/
+minio_data/
 
 # Reports and Generated Outputs
 reports/

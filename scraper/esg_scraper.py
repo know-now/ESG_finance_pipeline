@@ -1,10 +1,32 @@
+import boto3
 import time
 import json
 import feedparser 
+import os
+from datetime import datetime
 from kafka import KafkaProducer
+from botocore.exceptions import ClientError
 
 print("=== ESG Financial News Scraper (Kafka Producer) Started ===")
 
+MINIO_USER = os.environ.get("MINIO_ROOT_USER", "admin")
+MINIO_PASSWORD = os.environ.get("MINIO_ROOT_PASSWORD", "password123")
+print("[*] Connecting to MinIO Data Lake... ")
+s3_client = boto3.client('s3', 
+                        endpoint_url = 'http://minio:9000',
+                        aws_access_key_id=MINIO_USER,
+                        aws_secret_access_key=MINIO_PASSWORD)
+try:
+    s3_client.head_bucket(Bucket='raw-news')
+    print("[*] MinIO bucket 'raw-news' exists.")
+except ClientError as e:
+    error_code = e.response['Error']['Code']
+    if error_code == '404':
+        print("[*] Creating MinIO bucket 'raw-news'...")
+        s3_client.create_bucket(Bucket='raw-news')
+    else:
+        print(f"[-] Error checking bucket: {e}")
+    
 # Connecting to our Kafka-broker
 def connect_to_kafka(retries=10, delay=5):
     for attempt in range(retries):
@@ -59,7 +81,7 @@ def fetch_esg_news():
                 
                 full_text = (title + " " + summary).lower()
                 
-                # Checking if there is in a text at least one ESG-word
+                # Filter just ESG news before saving
                 if any(keyword in full_text for keyword in ESG_KEYWORDS):
                     article_data = {
                         "title": title,
@@ -68,11 +90,20 @@ def fetch_esg_news():
                         "summary": summary
                     }
                     
+                    file_name =f"news_{datetime.now().strftime('%Y%m%d_%H%M%S_')}.json"
+                    try:
+                        s3_client.put_object(Bucket='raw-news', Key=file_name, Body=json.dumps(article_data))
+                        print(f"[MINIO SAVE] -> {file_name}")
+                    except Exception as e:
+                        print(f"[-] Failed to save to MinIO: {e}")
+                #Sending to Kafka
                     producer.send('esg_news_stream', value=article_data)
                     producer.flush()
-                    seen_articles.add(title)
                     print(f"[KAFKA SEND] -> {title}")
                     found_articles += 1
+                    
+                    #Adding to seen articles
+                seen_articles.add(title)
         except Exception as e:
             print(f"[-] Error parsing {url}: {e}")
     print(f"[*] Cycle complete. Sent {found_articles} ESG articles to Kafka.")
@@ -83,6 +114,3 @@ if __name__ ==   "__main__":
         fetch_esg_news()
         print("Waiting 120 seconds before next fetch...")
         time.sleep(120)
-
-
-        
