@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main", "master"]
   pull_request:
-    brancher: ["main", "master"]
+    branches: ["main", "master"]
 
 jobs:
   test-python-code:
