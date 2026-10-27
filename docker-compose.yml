@@ -82,4 +82,29 @@ services:
       minio server /data --address=0.0.0.0:9000 --console-address=:9001"
     volumes:
       - ./minio_data:/data
+  airflow-webserver:
+    image: apache/airflow:2.7.1
+    container_name: esg_airflow
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
+      - AIRFLOW__CORE__FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlUkKD3NmZj9trIHWCEfFc=
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW_UID=50000
+      - _AIRFLOW_DB_UPGRADE=True
+      - _AIRFLOW_WWW_USER_CREATE=True
+      - _AIRFLOW_WWW_USER_USERNAME=admin
+      - _AIRFLOW_WWW_USER_PASSWORD=admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    depends_on:
+      -postgres
+    command: bash -c "airflow db upgrade && airflow users create --role Admin --username admin --email admin --firstname admin --lastname admin --password admin && airflow webserver"
+
+  airflow-scheduler:
+    
       
