@@ -110,7 +110,6 @@ def fetch_esg_news():
     print(f"[*] Total unique articles in memory: {len(seen_articles)}")
             
 if __name__ ==   "__main__":
-    while True: 
-        fetch_esg_news()
-        print("Waiting 120 seconds before next fetch...")
-        time.sleep(120)
+    print("[*] Airflow Trigger: Starting single fetch cycle...")
+    fetch_esg_news()
+    print("[*] Cycle complite. Process exiting gracefully.")
