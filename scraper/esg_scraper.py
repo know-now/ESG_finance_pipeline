@@ -16,17 +16,27 @@ s3_client = boto3.client('s3',
                         endpoint_url = 'http://minio:9000',
                         aws_access_key_id=MINIO_USER,
                         aws_secret_access_key=MINIO_PASSWORD)
-try:
-    s3_client.head_bucket(Bucket='raw-news')
-    print("[*] MinIO bucket 'raw-news' exists.")
-except ClientError as e:
-    error_code = e.response['Error']['Code']
-    if error_code == '404':
-        print("[*] Creating MinIO bucket 'raw-news'...")
-        s3_client.create_bucket(Bucket='raw-news')
-    else:
-        print(f"[-] Error checking bucket: {e}")
-    
+#Repeated attempt to connect
+def init_minio_bucket(retries=10, delay=5):
+    for attempt in range(retries):
+        try:
+            s3_client.head_bucket(Bucket='raw-news')
+            print("[*] MinIO bucket 'raw-news' exists.")
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            if error_code == '404':
+                print("[*] Creating MinIO bucket 'raw-news'...")
+                s3_client.create_bucket(Bucket='raw-news')
+            else:
+                print(f"[-] Error checking bucket: {e}")
+        except Exception as e:
+            print(f"[-] MinIO connection failed (Attempt {attempt + 1}/{retries}):{e}")
+            print(f"Retrying in {delay} seconds...")
+            time.sleep(delay)
+        
+    print("[-] Could nit connect to MinIO after multiple attempts.Exiting.")
+    exit(1)
+            
 # Connecting to our Kafka-broker
 def connect_to_kafka(retries=10, delay=5):
     for attempt in range(retries):
@@ -43,6 +53,7 @@ def connect_to_kafka(retries=10, delay=5):
             time.sleep(delay)
     print("[-] Could not connect to Kafka after multiple attempts. Exiting.")
     exit(1)    
+init_minio_bucket()
 
 producer = connect_to_kafka()
     

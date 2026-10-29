@@ -34,6 +34,7 @@ redis_data/
 kafka_data/
 zookeeper_data/
 minio_data/
+logs/
 
 # Reports and Generated Outputs
 reports/
