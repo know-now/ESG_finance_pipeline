@@ -1,7 +1,12 @@
 import streamlit as st
 import pandas as pd
+import psycopg2
 from sqlalchemy import create_engine
 import os
+from fpdf import FPDF
+import plotly.express as px 
+from datetime import datetime
+
 import plotly.express as px
 
 st.set_page_config(page_title="ESG Guardian", layout="wide")
