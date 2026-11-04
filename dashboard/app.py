@@ -90,3 +90,34 @@ with col_btn1:
     file_name='esg_risk_report.csv',
     mime='text/csv',
 )
+def create_pdf_report(dataframe, top_risks):
+    pdf = FPDF()
+    pdf.add_page()
+    
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt=f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True, align='C')
+    pdf.set_font("Arial", size=11)
+    
+    if not top_risks.empty:
+        for idx, row in top_risks.itterrows():
+            #preventing of errors of encoding in PDF
+            safe_title = str(row['title']).encode('latin-1', 'replace').decode('latin-1')
+            pdf.multi_cell(0, 10, txt=f'[-] Score: {row['finbert_risk']} - {safe_title}')
+    else:
+        pdf.cell(200, 10, txt="No critical risks identified.", ln=True)
+    pdf.ln(10)
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(200, 10, txt="2. Summary Statistics:", ln=True)
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt=f"Total Articles Analyzed: {len(dataframe)}", ln=True)
+    pdf.cell(200, 10, txt=f"Total High-Risk Events: {len(dataframe[dataframe['finbert_risk'] > 0.8])}", ln=True)
+    
+    return pdf.output(dest='S').encode('latin-1')
+with col_btn2:
+    pdf_bytes = create_pdf_report(df, critical_risks)
+    st.download_button(
+        label="📄 Executive Report Download (PDF)",
+        data=pdf_bytes, 
+        file_name=f"esg_risk_report_{datetime.now().strftime('%Y%m%d')}.pdf",
+        mime="application/pdf"
+    )

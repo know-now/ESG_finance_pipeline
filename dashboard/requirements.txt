@@ -3,3 +3,4 @@ pandas
 psycopg2-binary
 sqlalchemy
 plotly
+fpdf==1.7.2
