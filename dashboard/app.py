@@ -6,6 +6,7 @@ import os
 from fpdf import FPDF
 import plotly.express as px 
 from datetime import datetime
+import google.generativeai as genai
 
 st.set_page_config(page_title="ESG Guardian", layout="wide")
 st.title("📊 ESG Guardian: Real-Time NLP Analysis")
@@ -44,7 +45,7 @@ else:
     
     #2. Top- most risky events
     st.subheader(" Top-3 Critical Risks (Action Required)")
-    critical_risks = df[df['finbert_risk'] > 0.8].drop_dupkicates(subset=).head(3)
+    critical_risks = df[df['finbert_risk'] > 0.8].drop_duplicates(subset=['title']).head(3)
     if not critical_risks.empty:
         for idx, row in critical_risks.iterrows():
             st.warning(f"**Risk Score: {row['finbert_risk']}** | {row['title']} | *{row['source']}*")
@@ -90,12 +91,41 @@ with col_btn1:
     file_name='esg_risk_report.csv',
     mime='text/csv',
 )
+
+@st.cache_data(ttl=3600)
+def get_ai_executive_summary(risks_df):
+    if risks_df.empty:
+        return "No critical ESG risks detected in the current period. Market conditions remain stable."
+    #Creating context from news of the model
+    news_context = "\n".join([f"-{row['title']} (Score: {row['finbert_risk']:.2f})" for idx, row in risks_df.iterrows()])
+    prompt = f"""Act as a Senior Financial Risk Analyst. Analyze the following high-risk ESG events:
+    {news_context}
+    Write a professional executive summary (3-4 sentences) for investors.
+    Specify which companies/sectors face risks, what causes these risks (e.g., cyberattacks, market drops), and potential financial impacts.
+    Write in plain text without any markdown formatting or bullet points.
+    """
+    try:
+        api_key = os.environ.get("GEMINI_API_KEY")
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt)
+        
+        #Cleaning symbols for a correct PDF 
+        return response.text.replace('\n', ' ').replace('*', '')
+    except Exception as e:
+        #If API key is absent
+        titles = ", ".join(risks_df['title'].tolist())
+        return f"Recent monitoring indicates elevated systemic risks associated with the following events: {titles}. These incidents pose significant operational and reputational threats to the invilved entities. Investors are advised to recalibrate exposure in these sectors to mitigate potential capital erosion."
+    
 def create_pdf_report(dataframe, top_risks):
     pdf = FPDF()
     pdf.add_page()
     
     pdf.set_font("Arial", size=12)
     pdf.cell(200, 10, txt=f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True, align='C')
+    pdf.ln(10)
+    
+    pdf.set_font
     pdf.set_font("Arial", size=11)
     
     if not top_risks.empty:
