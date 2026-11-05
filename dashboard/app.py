@@ -107,17 +107,18 @@ def get_ai_executive_summary(risks_df):
     try:
         api_key = os.environ.get("GEMINI_API_KEY")
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-3.1-flash-lite')
         response = model.generate_content(prompt)
         
         #Cleaning symbols for a correct PDF 
         return response.text.replace('\n', ' ').replace('*', '')
     except Exception as e:
         #If API key is absent
+        st.error(f"Error Gemini API: {e}")
         titles = ", ".join(risks_df['title'].tolist())
         return f"Recent monitoring indicates elevated systemic risks associated with the following events: {titles}. These incidents pose significant operational and reputational threats to the invilved entities. Investors are advised to recalibrate exposure in these sectors to mitigate potential capital erosion."
     
-def create_pdf_report(dataframe, top_risks):
+def create_pdf_report(dataframe, top_risks, ai_summary_text):
     pdf = FPDF()
     pdf.add_page()
     
@@ -125,7 +126,15 @@ def create_pdf_report(dataframe, top_risks):
     pdf.cell(200, 10, txt=f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True, align='C')
     pdf.ln(10)
     
-    pdf.set_font
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(200, 10, txt="1. AI Executive Insights:", ln=True)
+    pdf.set_font("Arial", size=11)
+    pdf.multi_cell(0, 7, txt=ai_summary_text.encode('latin-1', 'replace').decode('latin-1'))
+    pdf.ln(10)
+    
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(200, 10, txt="2. Top Critical Risks (FinBERT > 0.8):", ln=True)
+    
     pdf.set_font("Arial", size=11)
     
     if not top_risks.empty:
@@ -144,7 +153,8 @@ def create_pdf_report(dataframe, top_risks):
     
     return pdf.output(dest='S').encode('latin-1')
 with col_btn2:
-    pdf_bytes = create_pdf_report(df, critical_risks)
+    ai_summary = get_ai_executive_summary(critical_risks)
+    pdf_bytes = create_pdf_report(df, critical_risks, ai_summary)
     st.download_button(
         label="📄 Executive Report Download (PDF)",
         data=pdf_bytes, 
