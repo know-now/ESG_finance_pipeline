@@ -44,7 +44,7 @@ else:
     
     #2. Top- most risky events
     st.subheader(" Top-3 Critical Risks (Action Required)")
-    critical_risks = df[df['finbert_risk'] > 0.8].head(3)
+    critical_risks = df[df['finbert_risk'] > 0.8].drop_dupkicates(subset=).head(3)
     if not critical_risks.empty:
         for idx, row in critical_risks.iterrows():
             st.warning(f"**Risk Score: {row['finbert_risk']}** | {row['title']} | *{row['source']}*")
@@ -99,10 +99,10 @@ def create_pdf_report(dataframe, top_risks):
     pdf.set_font("Arial", size=11)
     
     if not top_risks.empty:
-        for idx, row in top_risks.itterrows():
+        for idx, row in top_risks.iterrows():
             #preventing of errors of encoding in PDF
             safe_title = str(row['title']).encode('latin-1', 'replace').decode('latin-1')
-            pdf.multi_cell(0, 10, txt=f'[-] Score: {row['finbert_risk']} - {safe_title}')
+            pdf.multi_cell(0, 10, txt=f"[-] Score: {row['finbert_risk']} - {safe_title}")
     else:
         pdf.cell(200, 10, txt="No critical risks identified.", ln=True)
     pdf.ln(10)
