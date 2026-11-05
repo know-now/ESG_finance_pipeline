@@ -140,13 +140,13 @@ def create_pdf_report(dataframe, top_risks, ai_summary_text):
     if not top_risks.empty:
         for idx, row in top_risks.iterrows():
             #preventing of errors of encoding in PDF
-            safe_title = str(row['title']).encode('latin-1', 'replace').decode('latin-1')
+            safe_title = str(row['title']).replace("’", "'").encode('latin-1', 'replace').decode('latin-1')
             pdf.multi_cell(0, 10, txt=f"[-] Score: {row['finbert_risk']} - {safe_title}")
     else:
         pdf.cell(200, 10, txt="No critical risks identified.", ln=True)
     pdf.ln(10)
     pdf.set_font("Arial", 'B', 14)
-    pdf.cell(200, 10, txt="2. Summary Statistics:", ln=True)
+    pdf.cell(200, 10, txt="3. Summary Statistics:", ln=True)
     pdf.set_font("Arial", size=12)
     pdf.cell(200, 10, txt=f"Total Articles Analyzed: {len(dataframe)}", ln=True)
     pdf.cell(200, 10, txt=f"Total High-Risk Events: {len(dataframe[dataframe['finbert_risk'] > 0.8])}", ln=True)
