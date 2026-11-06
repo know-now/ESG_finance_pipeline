@@ -6,6 +6,7 @@ import os
 from datetime import datetime
 from kafka import KafkaProducer
 from botocore.exceptions import ClientError
+from newspaper import Article
 
 print("=== ESG Financial News Scraper (Kafka Producer) Started ===")
 
@@ -22,11 +23,13 @@ def init_minio_bucket(retries=10, delay=5):
         try:
             s3_client.head_bucket(Bucket='raw-news')
             print("[*] MinIO bucket 'raw-news' exists.")
+            return
         except ClientError as e:
             error_code = e.response['Error']['Code']
             if error_code == '404':
                 print("[*] Creating MinIO bucket 'raw-news'...")
                 s3_client.create_bucket(Bucket='raw-news')
+                return
             else:
                 print(f"[-] Error checking bucket: {e}")
         except Exception as e:
@@ -83,6 +86,7 @@ def fetch_esg_news():
             #checking forst 10 news out of each feed
             for entry in feed.entries[:10]:
                 title = entry.title 
+                link = entry.link
                 summary = entry.get('summary', '')
                 
                 print(f"[DEBUG] Found article: {title}")
@@ -90,16 +94,30 @@ def fetch_esg_news():
                 if title in seen_articles:
                     continue
                 
-                full_text = (title + " " + summary).lower()
+                search_text = (title + " " + summary).lower()
                 
                 # Filter just ESG news before saving
-                if any(keyword in full_text for keyword in ESG_KEYWORDS):
-                    article_data = {
+                if any(keyword in search_text for keyword in ESG_KEYWORDS):
+                    full_text = ""
+                    try:
+                        article = Article(link)
+                        article.download()
+                        article.parce()
+                        full_text = article.text
+                    except Exception as e:
+                        print(f"[-] Downloading text was not successful from {link}: {e}")
+                        full_text = summary
+                        
+                    if len(full_text) < 50:
+                        full_text = summary
+                        
+                        #Formation of a message with a full text
+                    article_data ={
                         "title": title,
                         "source": url,
                         "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
-                        "summary": summary
-                    }
+                        "text": full_text}
+                    
                     
                     file_name =f"news_{datetime.now().strftime('%Y%m%d_%H%M%S_')}.json"
                     try:
