@@ -21,3 +21,6 @@ apache-airflow
 sqlalchemy
 psycopg2-binary
 python-dotenv
+
+# Reports
+fpdf==1.7.2
