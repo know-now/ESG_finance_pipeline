@@ -1,0 +1,5 @@
+feedparser
+kafka-python
+python-dotenv
+newspaper3k
+lxml_html_clean
