@@ -70,8 +70,13 @@ FINANCE_FEEDS = [
     "https://www.investing.com/rss/news_25.rss", # Stock market news
     "https://www.ft.com/companies?format=rss",   # Financial Times Companies
     "https://search.cnbc.com/rs/search/combinedcms/view.xml?id=10000115", # CNBC Business
-    "https://feeds.a.dj.com/rss/RSSLifestyle.xml"
+    "https://feeds.a.dj.com/rss/RSSLifestyle.xml", 
+    "http://feeds.bbci.co.uk/news/business/rss.xml",      # BBC Business
+    "https://moxie.foxbusiness.com/google-publisher/markets.xml", # Fox Business
+    "https://nypost.com/business/feed/",
 ]
+
+
 
 seen_articles = set()
 
@@ -100,7 +105,12 @@ def fetch_esg_news():
                 if any(keyword in search_text for keyword in ESG_KEYWORDS):
                     full_text = ""
                     try:
-                        article = Article(link)
+                        from newspaper import Config
+                        config = Config()
+                        config.browser_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebEit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+                        config.request_timeout = 10
+                        
+                        article = Article(link, config=config)
                         article.download()
                         article.parce()
                         full_text = article.text
