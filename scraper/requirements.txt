@@ -1,3 +1,4 @@
+boto3
 feedparser
 kafka-python
 python-dotenv
