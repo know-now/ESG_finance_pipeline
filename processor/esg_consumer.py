@@ -56,9 +56,36 @@ def is_relevant_esg_news(title, text):
     Analyse the following financial news. Does this news specifically describe an Environmental, Social, or Governance (ESG) issue, risk, or milestone related to a specific company or sector?
     Answer ONLY 'YES' oe 'NO'.
     
-    
-    
+    Title: {title}
+    Text: {text[:800]}
     """
+    try:
+        response = gemini_model.generate_content(prompt)
+        answer = response.text.strip().upper()
+        return 'YES' in answer
+    except Exception as e:
+        print(f"[-] Gemini API Error: {e}")
+        return True
+def chunk_text(text, max_words=300):
+    """Braking a long text into blocks 300 words (BERT limit)"""
+    if not text:
+        return [""]
+    return [" ".join(words[i:i + max_words]) for i in range(0, len(words), max_words)]
+
+def analyze_risk_with_chunks(text, model):
+    """Running the text through the NLP-model in parts and finding maximum risk. """
+    if not text or len(text.strip())== 0:
+        return "NEUTRAL", 0.0
+    chunks = chunk_text(text)
+    max_risk_score = 0.0
+    fimal_sentiment= "NEUTRAL"
+    
+    for chunk in chunks:
+        try:
+            res = model(chunk)[0]
+            sent = res['label'].upper()
+            
+            
 
 def start_processing():
     #waiting until Kafka and Postgress is ready
