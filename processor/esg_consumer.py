@@ -44,13 +44,21 @@ print("[*] Loading Models (this might take a few minutes)...")
 
 #Basemodel (general English sentiment)
 distilbert = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
-
-
-#basemodel (general english sentiment)
-distilbert = pipeline("sentiment-analysis", model = "distilbert-base-uncased-finetuned-sst-2-english")
 #Finance model
 finbert = pipeline("sentiment-analysis", model="ProsusAI/finbert")
 print("[*] Both NLP Models loaded successfully")
+
+def is_relevant_esg_news(title, text):
+    """Filtering by Gemini. Returning True if the news is really ESG-news"""
+    if not GOOGLE_API_KEY:
+        return True #sending all news
+    prompt = f"""
+    Analyse the following financial news. Does this news specifically describe an Environmental, Social, or Governance (ESG) issue, risk, or milestone related to a specific company or sector?
+    Answer ONLY 'YES' oe 'NO'.
+    
+    
+    
+    """
 
 def start_processing():
     #waiting until Kafka and Postgress is ready
