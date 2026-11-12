@@ -36,6 +36,15 @@ print("[*] PostgreSQL Table Ready.")
 GOOGLE_API_KEY = os.environ.get("GEMINI_API_KEY")
 if not GOOGLE_API_KEY:
     print("[-] WARNING: GEMINI_API_KEY not found. LLM filtering will be bypassed.")
+else:
+    genai.configure(api_key=GOOGLE_API_KEY)
+gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+
+print("[*] Loading Models (this might take a few minutes)...")
+
+#Basemodel (general English sentiment)
+distilbert = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+
 
 #basemodel (general english sentiment)
 distilbert = pipeline("sentiment-analysis", model = "distilbert-base-uncased-finetuned-sst-2-english")
