@@ -2,8 +2,10 @@ import json
 import time
 import os
 from kafka import KafkaConsumer
+import psycopg2
 from transformers import pipeline
 from sqlalchemy import create_engine, Table, Column, Integer, String, Float, MetaData
+import google.generativeai as genai
 
 print("=== ESG DATA CONSUMER Started ===")
 
@@ -30,7 +32,10 @@ esg_news_table = Table(
 )
 metadata.create_all(engine)
 print("[*] PostgreSQL Table Ready.")
-print("[*] Loading Models (this might take a few minutes)...")
+#GEMINI SETUP
+GOOGLE_API_KEY = os.environ.get("GEMINI_API_KEY")
+if not GOOGLE_API_KEY:
+    print("[-] WARNING: GEMINI_API_KEY not found. LLM filtering will be bypassed.")
 
 #basemodel (general english sentiment)
 distilbert = pipeline("sentiment-analysis", model = "distilbert-base-uncased-finetuned-sst-2-english")

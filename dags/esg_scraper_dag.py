@@ -26,7 +26,7 @@ with DAG(
         api_version='auto',
         auto_remove=True,
         command="python /app/esg_scraper.py",
-        docker_url='tcp://docker-socket-proxy:2375',
+        docker_url='tcp://esg_docker_proxy:2375',
         network_mode="esg_finance_pipeline_default"
     )
     run_scraper
