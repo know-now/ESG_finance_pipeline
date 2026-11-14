@@ -84,6 +84,41 @@ def analyze_risk_with_chunks(text, model):
         try:
             res = model(chunk)[0]
             sent = res['label'].upper()
+            #calculating the risk (negative = high risk)
+            risk = res['score'] if sent =='NEGATIVE' else (1.0 - res['score'])
+            if risk > max_risk_score:
+                final_sentiment = sent
+        except Exception as e:
+            continue
+    return final_sentiment, max_risk_score
+def start_processing():
+    time.sleep(20) #waiting until Kafka and Postgress is ready
+    
+    consumer = KafrfConsumer(
+        'esg_news_stream',
+        bootstrap_servers=['kafka:9092'],
+        auto_offset_reset='earliest',
+        value_deserializer=lambda x: json.loads(x.decode('utf-8'))
+    )
+    print("[*] Connected to Kafka. Waiting for ESG news...")
+    for message in consumer:
+        data = message.value
+        title = data.get('title', 'No Title')
+        text = data.get('text', '')
+        
+        print(f"\[->] Received: {title}")
+        
+        # Filter through Gemini
+        print("[*] Asking Gemini if relevant...")
+        if not is_relevant_esg_news(title, text):
+            print("Gtmini says NO. Skipping noise.")
+            continue
+        print("Gemini says YES. Analyzing risk...")
+        
+        #Analysis of long texts with Chunking/
+            
+            
+            
             
             
 
