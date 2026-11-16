@@ -122,7 +122,21 @@ def start_processing():
         sent_f, risk_f = analyze_risk_with_chunks(text_to_analyze, finbert)
         
         print(f"  -> DistilBERT: {sent_d} ({risk_d:.2f}) | FinBERT: {sent_f:.2f}")
-        
+        #3. Saving to a database
+        with engine.connect() as conn:
+            conn.execute(esg_news_table.insert().values(
+                title=title,
+                source=data.get('source', ''),
+                distilbert_sentiment=sent_d,
+                distilbert_risk=risk_d,
+                finbert_sentiment=sent_f,
+                finbert_risk=risk_f,
+                timestamp=data.get('timestamp', '')
+            ))
+            conn.commit()
+            print("Saved to Database.")
+if __name__ == "__main__":
+    start_processing()
             
             
             
