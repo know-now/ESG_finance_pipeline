@@ -116,6 +116,13 @@ def start_processing():
         print("Gemini says YES. Analyzing risk...")
         
         #Analysis of long texts with Chunking/
+        text_to_analyze = text if text else title
+        
+        sent_d, risk_d, = analyze_risk_with_chunks(text_to_analyze, distilbert)
+        sent_f, risk_f = analyze_risk_with_chunks(text_to_analyze, finbert)
+        
+        print(f"  -> DistilBERT: {sent_d} ({risk_d:.2f}) | FinBERT: {sent_f:.2f}")
+        
             
             
             
